@@ -21,10 +21,7 @@ buildscript {
 
 task uploadUpdate() {
     doLast {
-//        AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest()
-//                .withRoleArn(findProperty('roleArn') as String)
-//                .withRoleSessionName('gradle')
-//
+
         String bucketName = findProperty('bucket') as String;
         String gameName = findProperty('game') as String;
 
@@ -38,16 +35,24 @@ task uploadUpdate() {
 
         ObjectListing listV2 = s3Client.listObjects(lor);
 
-        List versions = new ArrayList();
+        ArrayList versions = new ArrayList();
+        versions.add(0);
 
         listV2.commonPrefixes.each {
             prfx ->
-                String version = prfx.split('/')[2];
+                String version = prfx.split('/')[2].replace('v', '');
                 //println version;
                 versions.add(version);
         };
 
-        println versions;
+        println versions.sort()
+        int lastIndex = versions.size()-1;
+        int lastVersion = versions.get(lastIndex) as int;
+
+        int newVersion = ++lastVersion;
+
+        // this value we an parse in Jenkins
+        println newVersion;
 
         println "\nDone!"
     }
