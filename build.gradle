@@ -1,0 +1,54 @@
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicSessionCredentials
+import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest
+import com.amazonaws.services.securitytoken.model.Credentials
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.*;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: '1.11.895'
+        classpath group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.895'
+    }
+}
+
+task uploadUpdate() {
+    doLast {
+//        AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest()
+//                .withRoleArn(findProperty('roleArn') as String)
+//                .withRoleSessionName('gradle')
+//
+        String bucketName = findProperty('bucket') as String;
+        String gameName = findProperty('game') as String;
+
+        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                .withRegion(Regions.AP_SOUTHEAST_1)
+                .build();
+
+        ListObjectsRequest lor = new ListObjectsRequest()
+                .withBucketName(bucketName)
+                .withPrefix('games/' + gameName + '/').withDelimiter('/');
+
+        ObjectListing listV2 = s3Client.listObjects(lor);
+
+        List versions = new ArrayList();
+
+        listV2.commonPrefixes.each {
+            prfx ->
+                String version = prfx.split('/')[2];
+                //println version;
+                versions.add(version);
+        };
+
+        println versions;
+
+        println "\nDone!"
+    }
+}
