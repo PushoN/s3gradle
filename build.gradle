@@ -71,8 +71,6 @@ task runPutNewVersion { dependsOn uploadUpdate
 
         String cmd = "/usr/local/aws-cli/aws s3 sync ${distDir} s3://${bucketName}/games/${gameName}/v${uploadVersion} --acl public-read --quiet"
         //String cmd = "ls -al"
-
-        //String cmd = "export PATH=${System.getenv('PATH')}:/usr/local/aws-cli ";
         Runtime run = Runtime.getRuntime();
         Process pr = run.exec(cmd);
         pr.waitFor();
