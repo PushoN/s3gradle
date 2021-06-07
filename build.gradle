@@ -19,11 +19,17 @@ buildscript {
     }
 }
 
+def bucketName = '';
+def gameName = '';
+def uploadVersion = '0';
+def distDir = '';
+
 task uploadUpdate() {
     doLast {
 
-        String bucketName = findProperty('bucket') as String;
-        String gameName = findProperty('game') as String;
+        bucketName = findProperty('bucket') as String;
+        gameName = findProperty('game') as String;
+        distDir = findProperty('localPath') as String;
 
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
                 .withRegion(Regions.AP_SOUTHEAST_1)
@@ -54,6 +60,24 @@ task uploadUpdate() {
         // this value we an parse in Jenkins
         println newVersion;
 
+        uploadVersion = newVersion;
+
         println "\nDone!"
+    }
+}
+
+task runPutNewVersion { dependsOn uploadUpdate
+    doLast {
+
+        String cmd = "aws s3 sync ${distDir} s3://${bucketName}/games/${gameName}/v${uploadVersion} --acl public-read --quiet"
+        //String cmd = "ls -al";
+        Runtime run = Runtime.getRuntime();
+        Process pr = run.exec(cmd);
+        pr.waitFor();
+        BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+        String line = "";
+        while ((line = buf.readLine()) != null) {
+            System.out.println(line);
+        }
     }
 }
